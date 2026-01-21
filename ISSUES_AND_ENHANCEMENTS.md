@@ -252,6 +252,9 @@ vim themes/theme-yourname.css
 
 ### Fix Chart Colors
 Add JS patch in `themes/patches/yourtheme-charts.js`
+```js
+// Your chart patching code here
+```
 ```
 
 **Files to Create**:
@@ -286,9 +289,9 @@ check_pve() {
         PRODUCT="PVE"
         # Parse specifically for pve-manager version
         PRODUCT_VERSION=$(pveversion | grep "pve-manager" | cut -d'/' -f2)
-        # More robust: extract X.Y.Z pattern
+        # More robust: extract X.Y.Z pattern using sed (portable)
         if [[ -z "$PRODUCT_VERSION" ]]; then
-            PRODUCT_VERSION=$(pveversion | grep -oP 'pve-manager/\K[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+            PRODUCT_VERSION=$(pveversion | sed -n 's/.*pve-manager\/\([0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\).*/\1/p' | head -1)
         fi
         INDEX_TEMPLATE="$PVE_INDEX_TPL"
         JS_PATCHES_DIR="$PVE_JS_PATCHES_DIR"
@@ -618,7 +621,9 @@ validate_theme() {
     # Check file size (portable across BSD and GNU)
     local size=$(wc -c < "$css_file" | tr -d ' ')
     if [[ $size -gt 5242880 ]]; then # 5MB
-        print_warning "Theme file is very large ($(($size/1024/1024))MB)"
+        # Calculate MB with decimal precision
+        local size_mb=$(awk "BEGIN {printf \"%.2f\", $size/1024/1024}")
+        print_warning "Theme file is very large (${size_mb}MB)"
     fi
     
     # Check for required variables
@@ -657,12 +662,10 @@ validate_theme() {
 **Recommendation**:
 Create `docker/Dockerfile`:
 ```dockerfile
-# Note: Official Proxmox Docker images are not publicly available
+# Note: Official Proxmox Docker images are not publicly available due to licensing
 # This is a conceptual example - would require building from Proxmox ISO
-# or using community images like https://github.com/morph027/pve-kernel-image
 
-# Alternative: Use LXC containers on existing Proxmox host for testing
-# or set up a VM with Proxmox VE
+# Alternative approaches are recommended (see below)
 
 # Conceptual example:
 FROM debian:bookworm
