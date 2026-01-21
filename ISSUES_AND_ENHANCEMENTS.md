@@ -657,7 +657,18 @@ validate_theme() {
 **Recommendation**:
 Create `docker/Dockerfile`:
 ```dockerfile
-FROM proxmox/proxmox-ve:latest
+# Note: Official Proxmox Docker images are not publicly available
+# This is a conceptual example - would require building from Proxmox ISO
+# or using community images like https://github.com/morph027/pve-kernel-image
+
+# Alternative: Use LXC containers on existing Proxmox host for testing
+# or set up a VM with Proxmox VE
+
+# Conceptual example:
+FROM debian:bookworm
+
+# Install Proxmox repositories and packages
+# (Full implementation would require ISO extraction or official repositories)
 
 # Install ProxMorph
 COPY install.sh /tmp/
@@ -670,11 +681,23 @@ EXPOSE 8006
 CMD ["/usr/sbin/pveproxy"]
 ```
 
+**Note**: Due to Proxmox licensing and architecture, a better approach is:
+1. Use LXC containers on an existing Proxmox host
+2. Set up a dedicated test VM with Proxmox VE
+3. Use snapshot/restore for testing
+4. Contribute to community Docker image projects
+
 **Usage**:
 ```bash
-docker-compose up
-# Access Proxmox at https://localhost:8006
-# Test themes in isolated environment
+# Option 1: LXC container on Proxmox host
+pct create 999 local:vztmpl/debian-12-standard_12.2-1_amd64.tar.zst
+# Install Proxmox in container, then test themes
+
+# Option 2: VM snapshot testing
+qm snapshot <vmid> before-proxmorph-test
+./install.sh install
+# Test themes
+qm rollback <vmid> before-proxmorph-test
 ```
 
 ---
