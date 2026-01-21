@@ -41,7 +41,7 @@ $ find . -name "*test*" -o -name "*spec*"
 
 **Recommendation**:
 - Add Bash unit tests using [Bats](https://github.com/bats-core/bats-core) or [shunit2](https://github.com/kward/shunit2)
-- Create integration tests in Docker containers (official Proxmox images)
+- Create integration tests using LXC containers or VM snapshots (see #14 for realistic alternatives)
 - Test matrix: PVE 8.x/9.x, PBS 3.x/4.x
 - CI workflow to run tests on PRs
 
@@ -615,8 +615,8 @@ validate_theme() {
         print_warning "No :root CSS variables defined"
     fi
     
-    # Check file size
-    local size=$(stat -f%z "$css_file" 2>/dev/null || stat -c%s "$css_file")
+    # Check file size (portable across BSD and GNU)
+    local size=$(wc -c < "$css_file" | tr -d ' ')
     if [[ $size -gt 5242880 ]]; then # 5MB
         print_warning "Theme file is very large ($(($size/1024/1024))MB)"
     fi
